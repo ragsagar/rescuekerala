@@ -1,9 +1,13 @@
+from django.http import Http404
+from django.utils import timezone
+
 from .models import Person, RescueCamp
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.authentication import TokenAuthentication
 from rest_framework import serializers
-from .models import RescueCamp, Person
+from .models import RescueCamp, Person, Request
 
 class RescueCampSerializer(serializers.ModelSerializer):
     class Meta:
@@ -77,3 +81,25 @@ class CampList(APIView):
 
         else:
             return Response({'error' : 'District Code is Required'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class RequestCloseAPI(APIView):
+    """ API to close requests. This can be used to close
+    requests from externals webapps. A User should be created
+    for the thirdparty service, then a Token should be generated
+    and shared with them. """
+    authentication_classes = [TokenAuthentication]
+
+    def get_object(self, pk):
+        try:
+            return Request.objects.exclude(status=Request.CLOSED).get(pk=pk)
+        except Request.DoesNotExist:
+            raise Http404
+
+    def post(self, request, pk, format=None):
+        request_obj = self.get_object(pk)
+        request_obj.status = Request.CLOSED
+        request_obj.closed_by = request.user
+        request_obj.closing_time = timezone.now()
+        request_obj.save(update_fields=['status', 'closed_by', 'closing_time'])
+        return Response(status=status.HTTP_204_NO_CONTENT)

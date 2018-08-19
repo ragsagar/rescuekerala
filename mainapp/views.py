@@ -206,7 +206,7 @@ class RequestFilter(django_filters.FilterSet):
 
 
 def request_list(request):
-    filter = RequestFilter(request.GET, queryset=Request.objects.all() )
+    filter = RequestFilter(request.GET, queryset=Request.objects.exclude(status=Request.CLOSED))
     req_data = filter.qs.order_by('-id')
     paginator = Paginator(req_data, PER_PAGE)
     page = request.GET.get('page')
@@ -390,7 +390,7 @@ class CampRequirementsForm(forms.ModelForm):
 class CampRequirements(SuccessMessageMixin,LoginRequiredMixin,UpdateView):
     login_url = '/login/'
     model = RescueCamp
-    template_name='mainapp/camp_requirements.html'  
+    template_name='mainapp/camp_requirements.html'
     form_class = CampRequirementsForm
     success_url = '/coordinator_home/'
     success_message = "Updated requirements saved!"
@@ -484,7 +484,7 @@ class CoordinatorCampFilter(django_filters.FilterSet):
             'district' : ['exact'],
             'name' : ['icontains']
         }
-    
+
     def __init__(self, *args, **kwargs):
         super(CoordinatorCampFilter, self).__init__(*args, **kwargs)
         if self.data == {}:
@@ -497,7 +497,7 @@ class CoordinatorCampFilter(django_filters.FilterSet):
             'district' : ['exact'],
             'name' : ['icontains']
         }
-    
+
     def __init__(self, *args, **kwargs):
         super(CoordinatorCampFilter, self).__init__(*args, **kwargs)
         if self.data == {}:

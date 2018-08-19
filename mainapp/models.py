@@ -3,6 +3,7 @@ import uuid
 from django.db import models
 from django.core.validators import RegexValidator
 from django.contrib.auth.models import User
+from django.conf import settings
 
 districts = (
     ('alp','Alappuzha - ആലപ്പുഴ'),
@@ -21,11 +22,7 @@ districts = (
     ('wnd','Wayanad - വയനാട്'),
 )
 
-status_types =(
-    ('new', 'New'),
-    ('pro', 'In progess'),
-    ('sup', 'Supplied'),
-)
+
 
 contrib_status_types =(
     ('new', 'New'),
@@ -75,6 +72,14 @@ announcement_priorities = [
 
 
 class Request(models.Model):
+    NEW = 'new'
+    CLOSED = 'closed'
+    IN_PROGRESS = 'pro'
+    STATUS_TYPES = (
+        (NEW, 'New'),
+        (IN_PROGRESS, 'In progess'),
+        (CLOSED, 'Closed'),
+    )
     district = models.CharField(
         max_length = 15,
         choices = districts,
@@ -108,12 +113,14 @@ class Request(models.Model):
 
     needothers = models.CharField(max_length=500, verbose_name="Other needs - മറ്റു ആവശ്യങ്ങള്‍", blank=True)
     status = models.CharField(
-        max_length = 10,
-        choices = status_types,
-        default = 'new'
+        max_length=10,
+        choices=STATUS_TYPES,
+        default=NEW
     )
     supply_details = models.CharField(max_length=100, blank=True)
     dateadded = models.DateTimeField(auto_now_add=True)
+    closed_by = models.ForeignKey(settings.AUTH_USER_MODEL, models.SET_NULL, null=True, blank=True)
+    closing_time = models.DateTimeField(null=True, blank=True)
 
     def summarise(self):
         out = ""
